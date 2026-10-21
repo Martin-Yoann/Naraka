@@ -11,6 +11,7 @@ test('无星格2P保留零孔，购买链接采用game_ordersn，详情确认抽
  const item=normalizeItem(raw);assert.equal(item.holesCount,0);assert.ok(item.url.endsWith('/real-order'));const detail=await queryDetail(item,async()=>({ok:true,json:async()=>({status:1,equip:raw})}));assert.equal(detail.lotteryEndsAt,'2026-10-20T07:00:00.000Z');assert.equal(detail.lotteryConfirmed,true);
 });
 test('验证页、限流和无效响应必须停止，不以空商品成功代替',async()=>{
+ await assert.rejects(queryPage({},async()=>{throw new TypeError('fetch failed',{cause:{code:'UNABLE_TO_VERIFY_LEAF_SIGNATURE'}})}),/UNABLE_TO_VERIFY_LEAF_SIGNATURE/);
  await assert.rejects(queryPage({},async()=>({ok:false,status:429})),/429/);
  await assert.rejects(queryPage({},async()=>({ok:true,json:async()=>{throw Error()}})),/非JSON/);
  await assert.rejects(queryPage({},async()=>({ok:true,json:async()=>({status:0})})),/未成功/);
