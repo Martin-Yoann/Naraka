@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 const origin=process.env.SITE_URL||'http://127.0.0.1:3200',browser=await chromium.launch({executablePath:'C:/Program Files/Google/Chrome/Application/chrome.exe',headless:true});
 try{
  const health=await fetch(origin+'/api/health');assert.equal(health.status,200);assert.equal((await health.json()).storage,'postgres');
+ const catalog=await fetch(origin+'/catalog.json');assert.equal(catalog.status,200);assert.equal((await catalog.json()).items.length,29);
  const head=await fetch(origin+'/api/lottery',{method:'HEAD'});assert.equal(head.status,200);assert.equal(await head.text(),'');assert.equal((await fetch(origin+'/api/data',{method:'POST'})).status,405);
  const html=await(await fetch(origin+'/search')).text();assert.ok(html.includes('/_next/static/'));assert.ok(html.includes('portal-header'));assert.ok(!html.includes('<script type="module" src="portal-v2.js"'));
  const errors=[],page=await browser.newPage({viewport:{width:1440,height:1050}});page.on('pageerror',error=>errors.push(error.message));page.on('console',message=>{if(message.type()==='error'&&/hydration|Minified React|Portal initialization/i.test(message.text()))errors.push(message.text())});
