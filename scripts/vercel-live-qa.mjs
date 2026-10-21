@@ -9,8 +9,8 @@ try{
  await page.click('#search-next');await expect(page.locator('#search-page')).toContainText('2 /',{timeout:15000});
  await page.locator('[data-search-preview]').first().click();await expect(page.locator('.product-dialog')).toBeVisible();await expect(page.locator('.preview-frame')).toHaveAttribute('max','32');
  await page.keyboard.press('Escape');await page.locator('[data-search-compare]').first().click();await expect(page.locator('#compare-count')).toHaveText('1');
- await page.waitForFunction(()=>window.latestMarketData?.delivery==='cloud'&&window.latestMarketData.batches.length>20,null,{timeout:60000});
- const batches=await page.evaluate(()=>window.latestMarketData.batches.length);await page.screenshot({path:'artifacts/vercel-live-search.png',fullPage:true});
+ await page.click('#trends-nav');await page.waitForFunction(()=>window.latestMarketData?.delivery==='cloud'&&window.latestMarketData.batches.length>20,null,{timeout:60000});
+ await page.click('#search-nav');const batches=await page.evaluate(()=>window.latestMarketData.batches.length);await page.screenshot({path:'artifacts/vercel-live-search.png',fullPage:true});
  await page.click('#home-nav');await expect(page.locator('#home-view')).toBeVisible();await expect(page.locator('.portal-product')).toHaveCount(4);
  await page.click('#search-nav');await expect(page.locator('#search-view')).toBeVisible();await page.goBack();await expect(page.locator('#home-view')).toBeVisible();
  await page.setViewportSize({width:390,height:844});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);

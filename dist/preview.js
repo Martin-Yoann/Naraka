@@ -1,5 +1,7 @@
 import {safeImageURL} from './media.js';
+import {loadFrame,frameReady,warmFrames} from './frame-cache.js';
 export function mountPreview(container,item){
+ container.disposePreview?.();
  const frames=[...new Set((item.previewFrames??[]).map(safeImageURL).filter(Boolean))];if(!frames.length&&safeImageURL(item.thumbnail))frames.push(item.thumbnail);
  const history=document.createElement('div');history.className='preview-history';while(container.firstChild)history.append(container.firstChild);
  const tabs=document.createElement('div');tabs.className='preview-tabs';tabs.innerHTML='<button class="selected" type="button">外观预览</button><button type="button">观察记录</button>';
@@ -9,18 +11,34 @@ export function mountPreview(container,item){
  const buttons=tabs.querySelectorAll('button');buttons.forEach((button,n)=>{button.setAttribute('aria-pressed',String(n===0));button.onclick=()=>{panel.hidden=n!==0;history.hidden=n!==1;buttons.forEach((b,i)=>{b.classList.toggle('selected',i===n);b.setAttribute('aria-pressed',String(i===n))})}});
  const find=selector=>panel.querySelector(selector),image=find('.preview-image'),stage=find('.preview-stage'),loading=find('.preview-loading'),error=find('.preview-error'),slider=find('.preview-frame'),zoom=find('.preview-zoom'),mode=find('.preview-mode');
  const official=find('.preview-official');try{const u=new URL(item.url);if(u.protocol!=='https:'||!u.hostname.endsWith('.cbg.163.com'))throw Error();official.href=u.href}catch{official.hidden=true}
- let index=0,scale=1,x=0,y=0,start=null,pinch=null;const pointers=new Map(),prefetched=new Set();
- function transform(){image.style.transform=`translate(${x}px, ${y}px) scale(${scale})`;zoom.value=String(scale);find('.zoom-value').textContent=scale.toFixed(1)+'×'}
- function setZoom(value){scale=Math.max(1,Math.min(6,value));if(scale===1){x=0;y=0;mode.value='rotate'}else mode.value='pan';transform()}
- function show(value){index=(value+frames.length)%frames.length;loading.hidden=false;error.hidden=true;image.alt=`${item.skin} · 角度 ${index+1}/${frames.length}`;image.src=frames[index];slider.value=String(index+1);find('.preview-angle').textContent=`${index+1} / ${frames.length}`;find('.preview-original').href=frames[index];for(const d of [-1,1]){const src=frames[(index+d+frames.length)%frames.length];if(!prefetched.has(src)){prefetched.add(src);const img=new Image();img.referrerPolicy='no-referrer';img.src=src}}}
- image.onload=()=>{loading.hidden=true;error.hidden=true};image.onerror=()=>{loading.hidden=true;error.hidden=false};error.querySelector('button').onclick=()=>show(index);
- if(!frames.length){loading.hidden=true;error.hidden=false;error.textContent='该商品暂未采集到可用原图；请前往藏宝阁检视。';image.hidden=true;find('.preview-controls').hidden=true;return}
- slider.max=String(frames.length);slider.oninput=()=>show(Number(slider.value)-1);zoom.oninput=()=>setZoom(Number(zoom.value));
- find('[data-action="previous"]').onclick=()=>show(index-1);find('[data-action="next"]').onclick=()=>show(index+1);find('[data-action="reset"]').onclick=()=>{x=0;y=0;setZoom(1);show(0)};find('[data-action="background"]').onclick=()=>stage.classList.toggle('light');
- stage.onwheel=e=>{e.preventDefault();setZoom(scale+(e.deltaY<0?.25:-.25))};
- stage.onkeydown=e=>{if(e.key==='ArrowLeft'||e.key==='ArrowRight'){e.preventDefault();show(index+(e.key==='ArrowLeft'?-1:1))}if(e.key==='+'||e.key==='=')setZoom(scale+.25);if(e.key==='-')setZoom(scale-.25)};
- stage.onpointerdown=e=>{if(e.target.closest('button'))return;e.preventDefault();stage.setPointerCapture(e.pointerId);pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});if(pointers.size===1)start={x:e.clientX,y:e.clientY,index,panX:x,panY:y};if(pointers.size===2){const a=[...pointers.values()];pinch={distance:Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y),scale}}};
- stage.onpointermove=e=>{if(!pointers.has(e.pointerId))return;pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});if(pointers.size===2&&pinch){const a=[...pointers.values()];setZoom(pinch.scale*Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y)/Math.max(1,pinch.distance));return}if(!start)return;if(mode.value==='rotate'){const next=((start.index+Math.round((e.clientX-start.x)/8))%frames.length+frames.length)%frames.length;if(next!==index)show(next)}else{const limitX=stage.clientWidth*scale/2,limitY=stage.clientHeight*scale/2;x=Math.max(-limitX,Math.min(limitX,start.panX+e.clientX-start.x));y=Math.max(-limitY,Math.min(limitY,start.panY+e.clientY-start.y));transform()}};
- const end=e=>{pointers.delete(e.pointerId);pinch=null;start=null};stage.onpointerup=end;stage.onpointercancel=end;stage.onlostpointercapture=end;
- show(0);transform();
+ let index=0,scale=1,x=0,y=0,drawX=0,drawY=0,drawScale=1,start=null,pinch=null,raf=0,ticket=0,disposed=false,rotationPending=null,loadingTimer;const pointers=new Map(),dialog=container.closest('dialog'),reduced=matchMedia('(prefers-reduced-motion:reduce)');
+ const quality=document.createElement('span');quality.className='preview-quality';find('.preview-meta').prepend(quality);
+ const pixel=document.createElement('button');pixel.type='button';pixel.dataset.action='pixels';pixel.textContent='原图比例';pixel.title='按原图像素尺寸检视，超过原图精度的放大不会增加细节';
+ const expand=document.createElement('button');expand.type='button';expand.dataset.action='expand';expand.textContent='展开检视';find('.preview-controls').append(pixel,expand);
+ image.decoding='async';image.fetchPriority='high';loading.hidden=true;
+ find('.preview-hint').textContent='左右拖动旋转，滚轮以指针位置缩放；双击放大 / 还原，双指缩放后单指平移。原图比例可检查细节，清晰度以官方原图为限。';
+ function fit(){const w=stage.clientWidth,h=stage.clientHeight,nw=image.naturalWidth||w,nh=image.naturalHeight||h,k=Math.min(w/nw,h/nh);return {w:nw*k,h:nh*k}}
+ function clampPan(){const box=fit(),mx=Math.max(0,(box.w*scale-stage.clientWidth)/2+20),my=Math.max(0,(box.h*scale-stage.clientHeight)/2+20);x=Math.max(-mx,Math.min(mx,x));y=Math.max(-my,Math.min(my,y))}
+ function schedule(){if(!raf&&!disposed)raf=requestAnimationFrame(paint)}
+ function paint(){raf=0;if(disposed)return;if(rotationPending!==null){const next=rotationPending;rotationPending=null;show(next)}const a=reduced.matches?1:pointers.size?.78:.35;drawX+=(x-drawX)*a;drawY+=(y-drawY)*a;drawScale+=(scale-drawScale)*a;if(Math.abs(drawX-x)<.08)drawX=x;if(Math.abs(drawY-y)<.08)drawY=y;if(Math.abs(drawScale-scale)<.001)drawScale=scale;image.style.transform=`translate3d(${drawX}px,${drawY}px,0) scale(${drawScale})`;if(drawX!==x||drawY!==y||drawScale!==scale)schedule()}
+ function setZoom(value,point){const previous=scale;scale=Math.max(1,Math.min(6,value));if(point){x=point.x-(point.x-x)*scale/previous;y=point.y-(point.y-y)*scale/previous}if(scale===1){x=0;y=0;mode.value='rotate'}else mode.value='pan';mode.dispatchEvent(new Event('change',{bubbles:true}));clampPan();zoom.value=String(scale);find('.zoom-value').textContent=scale.toFixed(1)+'×';stage.dataset.mode=mode.value;schedule()}
+ function localPoint(clientX,clientY){const rect=stage.getBoundingClientRect();return {x:clientX-rect.left-rect.width/2,y:clientY-rect.top-rect.height/2}}
+ async function show(value){if(!frames.length||disposed)return;index=(value+frames.length)%frames.length;const version=++ticket,src=frames[index];clearTimeout(loadingTimer);error.hidden=true;loading.hidden=true;if(!frameReady(src))loadingTimer=setTimeout(()=>{if(version===ticket&&!disposed)loading.hidden=false},120);slider.value=String(index+1);find('.preview-angle').textContent=`${index+1} / ${frames.length}`;find('.preview-original').href=src;
+  try{const decoded=await loadFrame(src);if(disposed||version!==ticket)return;image.src=src;image.alt=`${item.skin} · 角度 ${index+1}/${frames.length}`;image.dataset.decoded='true';quality.textContent=`原图 ${decoded.naturalWidth} × ${decoded.naturalHeight}`;image.dataset.width=decoded.naturalWidth;image.dataset.height=decoded.naturalHeight;clampPan();schedule();warmFrames(frames,index)}catch{if(version===ticket&&!disposed)error.hidden=false}finally{if(version===ticket){clearTimeout(loadingTimer);loading.hidden=true}}}
+ error.querySelector('button').onclick=()=>show(index);
+ if(!frames.length){error.hidden=false;error.textContent='该商品暂未采集到可用原图；请前往藏宝阁检视。';image.hidden=true;find('.preview-controls').hidden=true;return}
+ slider.max=String(frames.length);slider.oninput=()=>{rotationPending=Number(slider.value)-1;schedule()};zoom.oninput=()=>setZoom(Number(zoom.value));mode.onchange=()=>stage.dataset.mode=mode.value;
+ find('[data-action="previous"]').onclick=()=>show(index-1);find('[data-action="next"]').onclick=()=>show(index+1);
+ find('[data-action="reset"]').onclick=()=>{setZoom(1);show(0)};find('[data-action="background"]').onclick=()=>stage.classList.toggle('light');
+ pixel.onclick=()=>setZoom((image.naturalWidth||fit().w)/Math.max(1,fit().w));expand.onclick=()=>{dialog?.classList.toggle('preview-expanded');expand.textContent=dialog?.classList.contains('preview-expanded')?'收起检视':'展开检视';requestAnimationFrame(()=>{clampPan();schedule()})};
+ stage.addEventListener('wheel',e=>{e.preventDefault();setZoom(scale*Math.exp(-Math.max(-500,Math.min(500,e.deltaY))*.002),localPoint(e.clientX,e.clientY))},{passive:false});
+ stage.ondblclick=e=>{e.preventDefault();setZoom(scale>1?1:2.2,localPoint(e.clientX,e.clientY))};
+ stage.onkeydown=e=>{if(e.key==='ArrowLeft'||e.key==='ArrowRight'){e.preventDefault();show(index+(e.key==='ArrowLeft'?-1:1))}if(e.key==='+'||e.key==='='){e.preventDefault();setZoom(scale+.25)}if(e.key==='-'){e.preventDefault();setZoom(scale-.25)}};
+ function beginSingle(p){start={x:p.x,y:p.y,index,panX:x,panY:y}}
+ stage.onpointerdown=e=>{if(e.button!==0||e.target.closest('button'))return;e.preventDefault();stage.focus({preventScroll:true});stage.setPointerCapture(e.pointerId);stage.classList.add('is-dragging');pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});if(pointers.size===1)beginSingle({x:e.clientX,y:e.clientY});if(pointers.size===2){const a=[...pointers.values()];pinch={distance:Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y),scale,x,y,point:localPoint((a[0].x+a[1].x)/2,(a[0].y+a[1].y)/2)}}};
+ stage.onpointermove=e=>{if(!pointers.has(e.pointerId))return;pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});if(pointers.size===2&&pinch){const a=[...pointers.values()],value=pinch.scale*Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y)/Math.max(1,pinch.distance);scale=pinch.scale;x=pinch.x;y=pinch.y;setZoom(value,pinch.point);return}if(!start)return;if(mode.value==='rotate'){rotationPending=start.index+Math.round((e.clientX-start.x)/(Math.max(240,stage.clientWidth)/(frames.length*1.5)));schedule()}else{x=start.panX+e.clientX-start.x;y=start.panY+e.clientY-start.y;clampPan();schedule()}};
+ const end=e=>{pointers.delete(e.pointerId);pinch=null;if(pointers.size===1)beginSingle([...pointers.values()][0]);else{start=null;stage.classList.remove('is-dragging')}};stage.onpointerup=end;stage.onpointercancel=end;stage.onlostpointercapture=end;
+ const observer=new ResizeObserver(()=>{clampPan();schedule()});observer.observe(stage);
+ const dispose=()=>{disposed=true;ticket++;cancelAnimationFrame(raf);clearTimeout(loadingTimer);observer.disconnect();dialog?.classList.remove('preview-expanded');dialog?.removeEventListener('close',dispose)};container.disposePreview=dispose;dialog?.addEventListener('close',dispose,{once:true});
+ show(0);setZoom(1);
 }
