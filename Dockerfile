@@ -3,6 +3,7 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci --omit=dev
 COPY . .
-ENV HOST=0.0.0.0 PORT=3100 NODE_ENV=production
-EXPOSE 3100
-CMD ["node", "server.mjs"]
+RUN npm run build
+ENV HOSTNAME=0.0.0.0 PORT=3000 NODE_ENV=production
+EXPOSE 3000
+CMD ["npm", "start"]

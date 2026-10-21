@@ -6,4 +6,6 @@ artifacts
 runtime
 .codex-publish
 .vercel-static
+.next
+public
 *.tar.gz

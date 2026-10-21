@@ -1,6 +1,6 @@
 import {PGlite} from '@electric-sql/pglite';import {chromium,expect} from '@playwright/test';
 import {readFile} from 'node:fs/promises';import {createServer} from 'node:http';import {resolve,extname,sep} from 'node:path';import assert from 'node:assert/strict';
-import {cloudStorage} from '../lib/cloud-storage.mjs';import {createCloudHandler} from '../api/index.js';
+import {cloudStorage} from '../lib/cloud-storage.mjs';import {createCloudHandler} from '../lib/cloud-handler.mjs';
 const pg=new PGlite();await pg.exec(await readFile('lib/cloud-schema.sql','utf8'));const db={async query(sql,params){const r=await pg.query(sql,params);return {...r,rowCount:r.affectedRows??r.rows.length}},async connect(){return {...this,release(){}}}},cloud=cloudStorage(db);
 const catalog=JSON.parse(await readFile('dist/catalog.json','utf8')),market=JSON.parse(await readFile('dist/market.json','utf8')),stock=JSON.parse(await readFile('dist/inventory/'+catalog.items[0].id+'.json','utf8')).items.slice(0,60);
 await cloud.settings.put('catalog.json',catalog);await cloud.inventory.saveDetails(stock);for(const batch of market.batches.slice(-13))await cloud.store.import(batch);

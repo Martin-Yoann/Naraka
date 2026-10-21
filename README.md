@@ -1,4 +1,8 @@
-# 谪星阁 V2.3 · 交互、加载与原图检视
+# 谪星阁 V2.4 · Next.js
+
+正式站现使用 Next.js 16 App Router + React 19 + Neon，GitHub Actions 每30分钟计划采集。开发：`npm ci`、`npm run dev`；生产：`npm run build`、`npm start`。页面地址支持 `/search`、`/compare`、`/lottery` 等，旧 hash 链接保留兼容。已有工具与动画继续复用，尚未逐项重写为 React 状态组件。架构、部署与检查见 [Next.js 迁移说明](docs/next-migration.md)。
+
+以下包含此前版本及本地 SQLite 工具的说明；原本机服务改用 `npm run start:local`，正式站以 Next.js 迁移说明为准。
 
 首屏先读取最新有效采样；历史行情在进入趋势或行情时加载。图鉴按页面与悬停意图预加载，节省流量模式减少图片预取。预览保留官方原图，新增实际分辨率、原图比例与展开检视；切帧先解码再显示，保留当前画面并支持失败重试。鼠标指针中心缩放、双击缩放、双指缩放和缩放后单指平移使用逐帧调度。比较图片也采用解码缓存和逐帧绘制。
 

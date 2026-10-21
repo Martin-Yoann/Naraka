@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {createServer} from 'node:http';
 import {readFile} from 'node:fs/promises';
 import {resolve,extname,sep} from 'node:path';
-import handler from '../api/index.js';
+import handler from '../lib/cloud-handler.mjs';
 import {closeCloud} from '../lib/cloud-db.mjs';
 const root=resolve('dist'),server=createServer(async(req,res)=>{try{if(req.url.startsWith('/api/'))return handler(req,res);if(req.url==='/catalog.json'){req.url='/api/catalog';return handler(req,res)}const path=resolve(root,'.'+(req.url==='/'?'/index.html':req.url.split('?')[0]));if(!path.startsWith(root+sep)){res.writeHead(403);return res.end()}res.setHeader('content-type',({'.js':'application/javascript','.css':'text/css','.json':'application/json','.html':'text/html'})[extname(path)]??'application/octet-stream');res.end(await readFile(path))}catch{res.writeHead(404);res.end()}});
 await new Promise(r=>server.listen(0,'127.0.0.1',r));

@@ -2,7 +2,7 @@ import test from 'node:test';import assert from 'node:assert/strict';
 import {PGlite} from '@electric-sql/pglite';
 import {readFile} from 'node:fs/promises';
 import {cloudStorage} from '../lib/cloud-storage.mjs';
-import {createCloudHandler} from '../api/index.js';
+import {createCloudHandler} from '../lib/cloud-handler.mjs';
 const sample=(id,overrides={})=>({id,equipType:'3400046',skin:'谪星·2P',holesCount:0,slots:[],unlocks:[],priceCents:100,favorites:1,publicity:false,status:'listed',isLottery:false,lotteryConfirmed:false,lotteryEndsAt:null,...overrides});
 test('PostgreSQL schema, durable pagination/search/leases, real history and cloud HTTP contract',async()=>{
  const pg=new PGlite();try{await pg.exec(await readFile(new URL('../lib/cloud-schema.sql',import.meta.url),'utf8'));

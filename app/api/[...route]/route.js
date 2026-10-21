@@ -1,0 +1,10 @@
+import {cloudResponse} from '../../../lib/next-cloud.mjs';
+export const runtime='nodejs';
+export const dynamic='force-dynamic';
+export const maxDuration=60;
+export const GET=cloudResponse;
+export const HEAD=cloudResponse;
+export const POST=cloudResponse;
+export const PUT=cloudResponse;
+export const PATCH=cloudResponse;
+export const DELETE=cloudResponse;

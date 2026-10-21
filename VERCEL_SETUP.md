@@ -29,8 +29,8 @@ npm run db:seed
 ## 2. 创建 Vercel 项目
 
 1. 在 Vercel 选择 Add New → Project，导入 `Martin-Yoann/Naraka`。
-2. Framework Preset 使用 Other；Root Directory 使用仓库根目录。
-3. Node.js 版本选择 24；配置已写入 `vercel.json`，构建命令 `npm run build:vercel`，输出目录 `.vercel-static`。
+2. Framework Preset 使用 Next.js；Root Directory 使用仓库根目录。
+3. Node.js 版本选择 24；配置已写入 `vercel.json`，构建命令 `npm run build`，输出目录使用框架默认值。升级旧项目时清除 `.vercel-static` 输出目录覆盖。Next.js 架构与开发方式见 [迁移说明](docs/next-migration.md)。
 4. 在 Environment Variables 添加 `DATABASE_URL`，值为同一 Neon pooled 连接串。至少勾选 Production；如果要测试预览，也配置 Preview。
 5. Deploy。环境变量变更后重新部署。
 

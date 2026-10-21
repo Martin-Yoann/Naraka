@@ -10,6 +10,9 @@ runtime/
 .env.*
 !.env.example
 
+.next/
+public/
+
 dist/inventory/
 dist/market.json
 dist/collection.json
