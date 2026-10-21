@@ -1,2 +1,3 @@
 import {compactInventory} from './inventory-search.js';
-export function compactMarket(data){return {...data,batches:data.batches.map(b=>({...b,items:b.items.map(compactInventory)})),...(data.lottery?{lottery:{...data.lottery,groups:data.lottery.groups.map(g=>({...g,item:g.item?compactInventory(g.item):g.item,current:g.current?compactInventory(g.current):null}))}}:{})}}
+export function compactLottery(summary){return summary?{...summary,groups:summary.groups.map(g=>({...g,item:g.item?compactInventory(g.item):g.item,lastObserved:g.lastObserved?compactInventory(g.lastObserved):null,current:g.current?compactInventory(g.current):null}))}:null}
+export function compactMarket(data){return {...data,batches:data.batches.map(b=>({...b,items:b.items.map(compactInventory)})),...(data.lottery?{lottery:compactLottery(data.lottery)}:{})}}

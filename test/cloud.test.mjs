@@ -27,6 +27,7 @@ test('PostgreSQL schema, durable pagination/search/leases, real history and clou
  const fast=await request('/api/data?mode=latest');assert.equal(fast.status,200);assert.equal(fast.body.batches.length,2);assert.ok(fast.body.nextBefore);assert.ok(fast.body.batches.every(b=>b.items.every(i=>!i.previewFrames)));assert.ok(fast.body.lottery.groups.every(g=>!g.item.previewFrames));
  assert.equal((await request('/api/index?route=inventory/search&page=2')).body.items.length,20);assert.equal((await request('/api/inventory/search?page=-1')).status,400);
  assert.equal((await request('/api/data')).body.lottery.events.length,1);assert.equal((await request('/api/auth/status')).body.webReady,false);
+ const summary=await request('/api/lottery');assert.equal(summary.status,200);assert.equal(summary.body.groups[0].lastObserved.priceCents,90);assert.ok(!summary.body.groups[0].lastObserved.previewFrames);
  assert.equal((await request('/api/inventory/item?id=item-00')).body.item.id,'item-00');assert.equal((await request('/api/inventory/verify?id=unknown')).status,404);
  }finally{await pg.close()}
 });

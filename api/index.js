@@ -1,4 +1,4 @@
-import {compactMarket} from '../dist/market-payload.js';
+import {compactLottery,compactMarket} from '../dist/market-payload.js';
 import {currentLottery} from '../lib/cloud-lottery.mjs';
 import {cloudStorage} from '../lib/cloud-storage.mjs';
 import {queryDetail} from '../lib/cbg.mjs';
@@ -13,6 +13,7 @@ export function createCloudHandler(storageFactory=cloudStorage,detail=queryDetai
  const {store,inventory,settings,lease}=storageFactory();
  if(path==='/api/health'){await settings.get('catalog.json');const collection=await settings.get('collection.json');return json(res,200,{status:'ok',storage:'postgres',collector:'github-actions-30m',lastRun:collection?.updatedAt??null,lastError:collection?.error??null})}
  if(path==='/api/collection'||path==='/api/catalog'){const value=await settings.get(path==='/api/catalog'?'catalog.json':'collection.json');return json(res,value?200:503,value??{error:'等待首次云端采集或数据迁移'})}
+ if(path==='/api/lottery'){const summary=currentLottery(await settings.get('lottery.json'));return json(res,summary?200:503,compactLottery(summary)??{error:'等待首次已确认抽签采集'})}
  if(path==='/api/data'){const before=url.searchParams.get('before'),after=url.searchParams.get('after'),latestOnly=url.searchParams.get('mode')==='latest',thin=latestOnly||url.searchParams.get('mode')==='updates';if(after&&!Number.isFinite(Date.parse(after)))return json(res,400,{error:'Invalid cursor'});if(before&&!Number.isFinite(Date.parse(before)))return json(res,400,{error:'无效历史游标'});const lottery=!before?currentLottery(await settings.get('lottery.json')):null;let limit=12,data;do{data=await store.read({before,after,limit,media:before?false:thin?'thumbnail':true,latestOnly});if(!before)data.lottery=lottery;if(thin)data=compactMarket(data);if(latestOnly)data.nextBefore=data.batches[0]?.at??null;if(Buffer.byteLength(JSON.stringify(data))<3800000)break;limit=Math.floor(limit/2)}while(limit>=1);if(limit<1)return json(res,503,{error:'单批数据过大，需调整行情采样'});return json(res,200,data)}
  if(path==='/api/inventory/search'){let filter;try{filter=JSON.parse(url.searchParams.get('filter')||'{}')}catch{return json(res,400,{error:'无效搜索条件'})}let data;try{data=await inventory.search({filter,sort:url.searchParams.get('sort')||'price',page:Number(url.searchParams.get('page')||1),limit:20})}catch(error){if(error.message.startsWith('Invalid'))return json(res,400,{error:'搜索条件或页码无效'});throw error}return json(res,200,{...data,items:data.items.map(compactInventory),source:'cloud'})}
  if(path==='/api/inventory'){const page=Number(url.searchParams.get('page')||1);if(!Number.isInteger(page)||page<1||page>100000)return json(res,400,{error:'无效页码'});return json(res,200,await inventory.list({type:url.searchParams.get('type')||'',page,limit:20}))}

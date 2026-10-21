@@ -1,6 +1,8 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {lotterySummary} from '../dist/lottery.js';
+import {advanceLottery,currentLottery} from '../lib/cloud-lottery.mjs';
+import {compactLottery} from '../dist/market-payload.js';
 import {openAccounts} from '../lib/accounts.mjs';
 import {authorizationURL,templateData,exchangeCode} from '../lib/wechat.mjs';
 const item=(price,holes=3)=>({id:'a',skin:'谪星·测试',holesCount:holes,slots:[500,600,700],priceCents:price,status:'listed',isLottery:true,lotteryConfirmed:true,lotteryEndsAt:'2026-10-20T12:00:00Z',url:'https://yjwujian.cbg.163.com/'});
@@ -17,6 +19,16 @@ test('普通商品、未确认抽签、截止后的抽签均不记为抽签价�
  const s=lotterySummary([batch(1,[item(100)])],Date.parse('2026-10-21T00:00:00Z'));assert.equal(s.groups[0].current,null);
 });
 test('长轮次中已截止的短窗口仍按真实详情观察时间记历史，不提供过期购买入口',()=>{const observed={...item(10000),observedAt:'2026-10-20T01:01:00Z',lotteryEndsAt:'2026-10-20T01:02:00Z'};const summary=lotterySummary([{at:'2026-10-20T01:06:00Z',coverage:'partial',items:[observed]}],Date.parse('2026-10-20T01:07:00Z'));assert.equal(summary.groups.length,1);assert.equal(summary.groups[0].at,observed.observedAt);assert.equal(summary.groups[0].current,null)});
+
+test('截止或后续未采到样本时保留最近观察价、星格和截止时间，历史最低与最近观察分别保存',()=>{
+ const low={...item(9000),slots:[100,200,300]},recent={...item(12000),id:'later',slots:[700,800,900]};
+ const first=advanceLottery(null,batch(1,[low])),second=advanceLottery(first,batch(2,[recent])),empty=advanceLottery(second,batch(3,[]));
+ assert.equal(second.groups[0].priceCents,9000);assert.equal(second.groups[0].lastObserved.priceCents,12000);assert.deepEqual(second.groups[0].item.slots,low.slots);
+ const result=currentLottery(empty,Date.parse('2026-10-21T00:00:00Z')).groups[0];assert.equal(result.current,null);assert.equal(result.lastObserved.id,'later');assert.deepEqual(result.lastObserved.slots,recent.slots);assert.equal(result.lastObserved.lotteryEndsAt,recent.lotteryEndsAt);assert.equal(result.lastObserved.observedAt,batch(2,[]).at);
+ assert.equal(lotterySummary([batch(1,[low]),batch(2,[recent])]).groups[0].lastObserved.id,'later');
+ const legacy={...second,groups:second.groups.map(g=>({...g,lastObserved:undefined,current:recent}))};assert.equal(currentLottery(legacy,Date.parse('2026-10-21T00:00:00Z')).groups[0].lastObserved.id,'later');
+ const compact=compactLottery({...second,groups:second.groups.map(g=>({...g,lastObserved:{...recent,previewFrames:['large']}}))});assert.ok(!('previewFrames' in compact.groups[0].lastObserved));
+});
 test('OAuth state一次性且会话不可用其他随机token替代',()=>{
  const db=openAccounts(':memory:');const state=db.state('oa');assert.equal(db.consumeState(state),'oa');assert.equal(db.consumeState(state),null);
  const token=db.login('app','openid',null,true);const user=db.user(token);assert.ok(user.id);assert.equal(user.oa_openid,'openid');assert.equal(db.user('forged'),null);db.logout(token);assert.equal(db.user(token),null);db.close();

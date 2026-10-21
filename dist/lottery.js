@@ -8,6 +8,7 @@ export function lotterySummary(batches,now=Date.now()){
   for(const[key,item]of current){const old=groups.get(key);const isLow=old&&item.priceCents<old.priceCents;
    if(isLow)events.push({id:`${key}:${item.priceCents}`,key,skin:item.skin,holesCount:item.holesCount??item.slots.length,previousCents:old.priceCents,priceCents:item.priceCents,itemId:item.id,url:item.url,at:item.observedAt??batch.at,endsAt:item.lotteryEndsAt,slots:item.slots});
    if(!old||item.priceCents<old.priceCents)groups.set(key,{key,skin:item.skin,holesCount:item.holesCount??item.slots.length,priceCents:item.priceCents,at:item.observedAt??batch.at,firstObservedAt:old?.firstObservedAt??item.observedAt??batch.at,item});
+   groups.get(key).lastObserved={...item,observedAt:item.observedAt??batch.at};
   }
  }
  const latest=batches.filter(b=>b.coverage!=='failed').at(-1),active=new Map();
