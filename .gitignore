@@ -1,0 +1,15 @@
+data/
+node_modules/
+*.zip
+.env
+artifacts/
+runtime/
+.vercel/
+.vercel-static/
+.codex-publish/
+.env.*
+!.env.example
+
+dist/inventory/
+dist/market.json
+dist/collection.json

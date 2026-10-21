@@ -1,0 +1,3 @@
+const hosts=new Set(['cbg-capture.res.netease.com','cbg-yjwujian.res.netease.com']);
+export function safeImageURL(value){try{const url=new URL(value);return url.protocol==='https:'&&hosts.has(url.hostname)&&!url.username&&!url.password&&/\.(png|jpe?g|webp)$/i.test(url.pathname)?url.href:null}catch{return null}}
+export function extractMedia(raw){const other=raw.other_info??{},frames=raw.capture_url??other.capture_url??[];return {previewFrames:Array.isArray(frames)?[...new Set(frames.map(safeImageURL).filter(Boolean))].slice(0,64):[],thumbnail:safeImageURL(raw.equip_type_inspection_view_url??other.equip_type_inspection_view_url??other.equip_type_view_url??raw.icon??other.icon),supports3d:raw.support_3d_preview===true}}

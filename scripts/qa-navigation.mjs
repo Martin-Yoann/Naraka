@@ -1,0 +1,1 @@
+export async function clickNav(page,selector){const nav=page.locator(selector);if(await nav.evaluate(element=>element.closest('#more-menu')!==null)){if(await page.locator('#more-toggle').getAttribute('aria-expanded')!=='true')await page.click('#more-toggle')}else if(!await nav.isVisible())await page.click('#more-toggle');await nav.click()}

@@ -1,0 +1,28 @@
+services:
+  web:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3100:3100"
+    volumes:
+      - market-data:/app/data
+      - market-export:/app/dist/inventory
+      - market-snapshots:/app/runtime
+    environment:
+      HOST: 0.0.0.0
+      PORT: 3100
+      RUNTIME_EXPORT_DIR: /app/runtime
+  collector:
+    build: .
+    restart: unless-stopped
+    command: ["node", "scripts/collector-service.mjs"]
+    environment:
+      RUNTIME_EXPORT_DIR: /app/runtime
+    volumes:
+      - market-data:/app/data
+      - market-export:/app/dist/inventory
+      - market-snapshots:/app/runtime
+volumes:
+  market-data:
+  market-export:
+  market-snapshots:

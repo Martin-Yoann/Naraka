@@ -1,0 +1,9 @@
+node_modules
+.git
+.env
+data
+artifacts
+runtime
+.codex-publish
+.vercel-static
+*.tar.gz
