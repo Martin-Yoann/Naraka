@@ -9,6 +9,7 @@ test('PostgreSQL schema, durable pagination/search/leases, real history and clou
  const db={async query(text,values){const r=await pg.query(text,values);return {...r,rowCount:r.affectedRows??r.rows.length}},async connect(){return {...this,release(){}}}};
  const cloud=cloudStorage(db),now=new Date().toISOString(),items=Array.from({length:43},(_,i)=>sample('item-'+String(i).padStart(2,'0'),{priceCents:100+i}));await cloud.inventory.saveDetails(items,now);
  assert.equal((await cloud.inventory.search()).count,43);assert.equal((await cloud.inventory.search({page:3})).items.length,3);
+ assert.equal(Number((await db.query('SELECT count(*) n FROM zx_observations')).rows[0].n),43);await cloud.inventory.saveDetails(items,now);assert.equal(Number((await db.query('SELECT count(*) n FROM zx_observations')).rows[0].n),43);
  assert.equal((await cloud.inventory.search({filter:{category:'character',holes:'0',priceMin:120}})).count,23);
  assert.equal((await cloud.inventory.search({filter:{query:'%'}})).count,0);assert.equal((await cloud.inventory.search({filter:{query:'2P'}})).count,43);
  await assert.rejects(()=>cloud.inventory.search({filter:{priceMin:'bad'}}));await assert.rejects(()=>cloud.inventory.search({sort:'price;drop table'}));

@@ -9,3 +9,4 @@ CREATE TABLE IF NOT EXISTS zx_settings(key text PRIMARY KEY,payload jsonb NOT NU
 CREATE TABLE IF NOT EXISTS zx_batches(at timestamptz PRIMARY KEY,coverage text NOT NULL,payload jsonb NOT NULL);
 CREATE TABLE IF NOT EXISTS zx_media(id text PRIMARY KEY,payload jsonb NOT NULL);
 CREATE TABLE IF NOT EXISTS zx_leases(name text PRIMARY KEY,owner text NOT NULL,expires timestamptz NOT NULL);
+CREATE TABLE IF NOT EXISTS zx_observations(id text NOT NULL,at timestamptz NOT NULL,price bigint NOT NULL,favorites bigint NOT NULL,lottery integer NOT NULL,PRIMARY KEY(id,at));
