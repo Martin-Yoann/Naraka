@@ -1,5 +1,7 @@
 # 谪星阁 V2.4 · Next.js
 
+抽签现支持独立手动查询，和30分钟行情任务分开；全站60秒共用一轮，最多读取30条最新列表并核验12件。数据每3天周期清理旧明细，史低汇总保留，另设商品/观察/批次数量上限。规则与操作见 [数据保留与独立抽签刷新](docs/data-retention-and-live.md)。
+
 正式站现使用 Next.js 16 App Router + React 19 + Neon，GitHub Actions 每30分钟计划采集。开发：`npm ci`、`npm run dev`；生产：`npm run build`、`npm start`。页面地址支持 `/search`、`/compare`、`/lottery` 等，旧 hash 链接保留兼容。已有工具与动画继续复用，尚未逐项重写为 React 状态组件。架构、部署与检查见 [Next.js 迁移说明](docs/next-migration.md)。
 
 以下包含此前版本及本地 SQLite 工具的说明；原本机服务改用 `npm run start:local`，正式站以 Next.js 迁移说明为准。

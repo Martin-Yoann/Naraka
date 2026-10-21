@@ -13,7 +13,8 @@
     "db:verify": "node --env-file-if-exists=.env scripts/verify-cloud.mjs",
     "dev": "node scripts/prepare-next.mjs && next dev",
     "build": "node scripts/prepare-next.mjs && next build",
-    "start:local": "node server.mjs"
+    "start:local": "node server.mjs",
+    "db:maintain": "node --env-file-if-exists=.env scripts/maintain-cloud.mjs"
   },
   "engines": {
     "node": ">=22.13"
