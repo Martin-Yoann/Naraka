@@ -19,6 +19,7 @@ Next.js 默认使用 3000 端口；原 SQLite 本机服务通过 `npm run start:
 
 - `app/layout.jsx`：全局样式、共享布局、元数据、连接预热。
 - `app/components/portal-shell.jsx`：服务器预渲染的页面壳，后续修改 Next 页面结构应在这里进行。
+- `app/components/portal-header.jsx`：直接渲染最终菜单。菜单顺序、名称统一取自 `dist/navigation.js`；工具只绑定已有按钮，不创建或搬动菜单。构建时通过 `scripts/sync-local-navigation.mjs` 同步本机 HTML 导航。
 - `app/components/portal-runtime.jsx`：交互初始化、GSAP、Next 原生 History API 导航与预加载。
 - `app/[view]/page.jsx`：预生成工具地址及标题。支持 `/search`、`/compare`、`/gallery`、`/simulator`、`/trends`、`/market`、`/watch`、`/calculator`、`/lottery`。原 hash 地址保留兼容。
 - `app/api/[...route]/route.js`：Node.js Route Handler，每次请求读取云端服务，不缓存价格。

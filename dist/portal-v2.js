@@ -1,3 +1,4 @@
+import {secondary} from './navigation.js';
 import {setupExperience} from './experience.js';
 import {warmItem} from './item-media.js';
 import './app.js';
@@ -13,14 +14,7 @@ import {$,esc,money,time,state,onData} from './workbench.js';
 import {safeImageURL} from './media.js';
 import {lotterySummary} from './lottery.js';
 window.portalRouterReady=true;
-const routes=new Map(),labels={home:'首页',market:'行情观察',watch:'我的监控',calculator:'费用试算',compare:'商品对比',search:'自定搜索',gallery:'图鉴',simulator:'洗练模拟',trends:'走势分析',lottery:'抽签提醒'};
-for(const nav of document.querySelectorAll('.nav')){const route=nav.dataset.view??nav.id.replace(/-nav$/,'');nav.dataset.route=route;routes.set(route,nav)}
-const primary=['home','compare','search','gallery','trends'],secondary=['simulator','calculator','market','watch','lottery'];
-const headerNav=document.querySelector('.portal-nav');
-if(primary.some((name,index)=>headerNav.children[index]!==routes.get(name)))for(const name of primary){const nav=routes.get(name);if(nav)headerNav.append(nav)}
-const more=document.querySelector('.more-wrapper');if(headerNav.lastElementChild!==more)headerNav.append(more);
-for(const name of secondary){const nav=routes.get(name);if(nav&&nav.parentElement!==$('#more-menu'))$('#more-menu').append(nav)}
-for(const [name,nav] of routes){const text=nav.querySelector('span');nav.childNodes.forEach(node=>{if(node.nodeType===3)node.textContent=''});if(text)text.textContent=labels[name];nav.setAttribute('title',labels[name]);}
+const routes=new Map([...document.querySelectorAll('.nav')].map(nav=>[nav.dataset.route,nav]));
 let navigating=false,currentRoute='home',highlight='favorites',highlightItems=[],menuTimer,keyboardMenu=false,requestedRoute=null;
 function syncRoute(name){const panel=$('#'+name+'-view');if(!panel)return;currentRoute=name;document.body.dataset.page=name;document.querySelectorAll('.content>section[id$="-view"]').forEach(view=>view.hidden=view!==panel);for(const [route,nav]of routes){nav.classList.toggle('active',route===name);nav.setAttribute('aria-current',route===name?'page':'false')}$('#more-toggle').classList.toggle('active',secondary.includes(name));$('.page-heading').hidden=name==='home';$('#data-notice').hidden=name==='home';closeMore();document.querySelectorAll('[data-section-tabs]').forEach(tab=>tab.hidden=!['gallery','simulator'].includes(name));window.dispatchEvent(new CustomEvent('portal-route',{detail:name}));}
 function commitNavigate(name,{replace=false}={}){name=({simulation:'gallery',trend:'trends'})[name]??name;if(!routes.has(name))name='home';if(navigating)return;navigating=true;try{if(name!=='home')routes.get(name).click();syncRoute(name);if(window.portalNextNavigate)writeRoute(name,true);window.scrollTo({top:0,behavior:'instant'});if(name==='market')window.dispatchEvent(new Event('resize'));}finally{navigating=false}}
