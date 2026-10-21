@@ -1,5 +1,9 @@
 # Vercel + Neon + GitHub Actions 部署
 
+2026-10-21 已完成正式部署：https://naraka-kappa.vercel.app 。Vercel 项目 `genkiyancub-8961s-projects/naraka` 已连接本仓库 `main` 分支，Production 与 Preview 已配置 Neon `DATABASE_URL`。GitHub Actions 使用同名仓库 Secret，每30分钟计划采集；数据更新直接写入 Neon，不依赖网页重新部署。线上分页搜索、32角度预览、比较、历史行情及手机布局已通过浏览器验证。
+
+已有数据已迁移并核对；首轮成功云端采集后累计11,424件商品、17,753条观察记录，29款完成该轮公开分页扫描。数值随后续采集变化。以下初始化步骤供重建环境时参考。
+
 目标仓库：`https://github.com/Martin-Yoann/Naraka`。此方案无需 Docker。代码适配已完成；远程连接、已有数据迁移、Vercel 发布和 Actions 实跑需要账号配置后验证。
 
 ## 1. 创建 Neon 项目
