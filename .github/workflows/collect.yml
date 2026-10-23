@@ -33,6 +33,18 @@ jobs:
       - name: Collect public market pages and save checkpoints
         run: npm run collect
 
+      - name: Match account lottery preferences against fresh confirmed observations
+        if: always()
+        env:
+          SITE_ORIGIN: https://www.gekiyan.com
+          WECHAT_OA_SANDBOX: 'true'
+          WECHAT_OA_APP_ID: ${{ secrets.WECHAT_OA_APP_ID }}
+          WECHAT_OA_APP_SECRET: ${{ secrets.WECHAT_OA_APP_SECRET }}
+          WECHAT_TEMPLATE_ID: ${{ secrets.WECHAT_TEMPLATE_ID }}
+          WECHAT_TEMPLATE_FIELDS: ${{ secrets.WECHAT_TEMPLATE_FIELDS }}
+          WECHAT_SEND_ENABLED: ${{ vars.WECHAT_SEND_ENABLED }}
+        run: node scripts/evaluate-preferences.mjs
+
       - name: Enforce row caps and run cleanup when 72 hours have elapsed
         if: always()
         run: npm run db:maintain
