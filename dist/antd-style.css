@@ -6,3 +6,19 @@
 @media(prefers-reduced-motion:reduce){.ui-select-trigger,.ui-field .ui-input,.button,.fee-tabs button,.fee-share-group button{transition:none}}
 .portal-header .portal-cbg>.icon-slot{display:inline-flex;align-items:center;justify-content:center;flex:none}.portal-cbg>.icon-slot>.app-icon{width:16px;height:16px}.fee-workspace #bargain-fields>.fee-field{margin:0 0 22px}.fee-results-column .calc-result h2{margin:0}.fee-workspace #fee-baseline{margin:18px 0 0;font-size:12px;line-height:1.9}.icon-slot{display:inline-flex;align-items:center;justify-content:center}.nav-dropdown-toggle .icon-slot{width:12px;height:12px}
 @media(pointer:coarse){.button,.row-preview{min-height:44px}.ui-field .ui-input,.ui-select-search input{font-size:16px!important}}
+
+/* Animate the symbol so positioned clear buttons retain their centering. */
+.app-icon[data-icon="close"]{transform-origin:50% 50%;transition:transform .32s cubic-bezier(.22,1,.36,1)}
+button:has(.app-icon[data-icon="close"]){cursor:pointer;transition:background-color .2s,color .2s,box-shadow .2s,opacity .15s}
+.dialog-head>button:has([data-icon="close"]),.pref-inbox-heading>button:has([data-icon="close"]){width:36px;height:36px;min-height:36px;padding:0;flex:none}
+button:has([data-icon="close"]):focus-visible{outline:2px solid #465472;outline-offset:3px}
+.portal-product-price>a{transition:transform .24s cubic-bezier(.22,1,.36,1),background-color .2s,box-shadow .2s;transform-origin:center}
+@media(hover:hover) and (pointer:fine){
+ button:not(:disabled):hover .app-icon[data-icon="close"]{transform:rotate(90deg)}
+ button:not(:disabled):has([data-icon="close"]):hover{background-color:#1c23380a;color:#1c2338}
+ .portal-product-price>a:hover{transform:scale(1.08);box-shadow:0 3px 10px #1c233814}
+}
+button:not(:disabled):active .app-icon[data-icon="close"]{transform:rotate(90deg) scale(.8);transition-duration:.1s}
+button:not(:disabled):has([data-icon="close"]):active{background-color:#1c233814;box-shadow:0 0 0 3px #1c23380d}
+.portal-product-price>a:active{transform:scale(.96)}
+@media(prefers-reduced-motion:reduce){.app-icon[data-icon="close"],.portal-product-price>a{transition:none!important;transform:none!important}}
