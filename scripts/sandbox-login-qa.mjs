@@ -10,7 +10,7 @@ try{
  await page.goto(origin);await page.waitForFunction(()=>window.portalRouteInitialized);
  await page.locator('#account-control').click();await expect(page.locator('.login-bridge-qr')).toBeVisible({timeout:20000});await expect(page.locator('.login-policy')).toContainText('测试号');
  await expect(page.locator('.login-status')).toContainText('扫码');await page.screenshot({path:'artifacts/sandbox-login-desktop.png'});
- const cookies=await page.context().cookies(origin);const ticket=cookies.find(c=>c.name==='zx_login');expect(ticket?.httpOnly).toBe(true);expect(ticket?.secure).toBe(true);
+ const cookies=await page.context().cookies(origin+'/api/auth/wechat/poll');const ticket=cookies.find(c=>c.name==='zx_login');expect(ticket?.httpOnly).toBe(true);expect(ticket?.secure).toBe(true);
  const [id]=decodeURIComponent(ticket.value).split('.');const phone=await browser.newContext();
  const scan=await phone.request.get(origin+'/api/auth/wechat?mode=oa&ticket='+id,{maxRedirects:0});expect(scan.status()).toBe(302);const redirect=new URL(scan.headers().location);expect(redirect.hostname).toBe('open.weixin.qq.com');expect(redirect.searchParams.get('scope')).toBe('snsapi_userinfo');expect(redirect.searchParams.get('redirect_uri')).toBe('https://www.gekiyan.com/api/auth/wechat/callback');expect(redirect.searchParams.has('secret')).toBe(false);
  await expect(page.locator('.login-status')).toContainText('已扫码',{timeout:12000});await page.locator('.login-close').click();await expect(page.locator('#login-dialog')).not.toBeVisible();
