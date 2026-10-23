@@ -202,7 +202,6 @@ export function createRobot(canvas, hero, onReady, onError){
 
     // Eye References for tracking & animation
     let pupilWraps = [];
-    let eyeScales = [];
     let antennaGlowMat = null;
 
     function mountHead(headMesh) {
@@ -306,6 +305,8 @@ export function createRobot(canvas, hero, onReady, onError){
 
       addVisor(R);
 
+      // Explicit layers prevent transparent eye parts from sorting over the pupil or glints.
+      // Keep both eyes front-facing throughout the supported tracking range.
       // Eyes Procedural Placement
       const eyePositions = [
         new THREE.Vector3(-0.43, -0.08, Math.sqrt(Math.max(0, Math.pow(R * 1.055, 2) - 0.43*0.43 - 0.08*0.08))),
@@ -333,11 +334,12 @@ export function createRobot(canvas, hero, onReady, onError){
           blending: THREE.AdditiveBlending,
           toneMapped: false,
           depthWrite: false,
+          side: THREE.DoubleSide,
           depthTest: false
         });
         const halo = new THREE.Mesh(new THREE.CircleGeometry(0.42, 32), haloMat);
         halo.position.z = -0.004;
-        halo.renderOrder = 9;
+        halo.renderOrder = 19;
         eyeGroup.add(halo);
 
         // Ring Frame
@@ -346,10 +348,11 @@ export function createRobot(canvas, hero, onReady, onError){
           transparent: true,
           toneMapped: false,
           depthWrite: false,
+          side: THREE.DoubleSide,
           depthTest: false
         });
         const ring = new THREE.Mesh(new THREE.RingGeometry(0.168, 0.212, 64), ringMat);
-        ring.renderOrder = 10;
+        ring.renderOrder = 20;
         eyeGroup.add(ring);
 
         // Iris
@@ -359,11 +362,12 @@ export function createRobot(canvas, hero, onReady, onError){
           transparent: true,
           toneMapped: false,
           depthWrite: false,
+          side: THREE.DoubleSide,
           depthTest: false
         });
         const iris = new THREE.Mesh(new THREE.CircleGeometry(0.17, 32), irisMat);
         iris.position.z = 0.001;
-        iris.renderOrder = 10;
+        iris.renderOrder = 21;
         eyeGroup.add(iris);
 
         // Pupil Wrap (Holds Pupil & Glint)
@@ -374,11 +378,12 @@ export function createRobot(canvas, hero, onReady, onError){
           transparent: true,
           toneMapped: false,
           depthWrite: false,
+          side: THREE.DoubleSide,
           depthTest: false
         });
         const pupil = new THREE.Mesh(new THREE.CircleGeometry(0.083, 32), pupilMat);
         pupil.position.z = 0.003;
-        pupil.renderOrder = 10;
+        pupil.renderOrder = 22;
         pupilWrap.add(pupil);
 
         const glintMat = new THREE.MeshBasicMaterial({
@@ -386,18 +391,23 @@ export function createRobot(canvas, hero, onReady, onError){
           transparent: true,
           toneMapped: false,
           depthWrite: false,
+          side: THREE.DoubleSide,
           depthTest: false
         });
-        const glint = new THREE.Mesh(new THREE.CircleGeometry(0.022, 16), glintMat);
-        glint.position.set(0.032, 0.034, 0.005);
-        glint.renderOrder = 10;
+        const glint = new THREE.Mesh(new THREE.CircleGeometry(0.029, 24), glintMat);
+        glint.position.set(0.026, 0.029, 0.008);
+        glint.renderOrder = 23;
         pupilWrap.add(glint);
+        // Fixed unlit highlights on both pupils; independent of the studio light angle.
+        const softGlint = new THREE.Mesh(new THREE.CircleGeometry(0.011, 16), glintMat);
+        softGlint.position.set(-0.027, -0.024, 0.009);
+        softGlint.renderOrder = 24;
+        pupilWrap.add(softGlint);
 
         eyeGroup.add(pupilWrap);
         head.add(eyeGroup);
 
         pupilWraps.push(pupilWrap);
-        eyeScales.push(eyeGroup.scale);
       });
 
       // Antenna Glowing Balls Detection & Attachment
@@ -616,12 +626,6 @@ export function createRobot(canvas, hero, onReady, onError){
     const pointerMove=e=>updatePointer(e.clientX,e.clientY);
     const pointerLeave=()=>{target.x=0;target.y=0};
     const interaction=hero.closest('.portal-hero');interaction.addEventListener('pointermove',pointerMove,{passive:true});interaction.addEventListener('pointerleave',pointerLeave);
-    // Eye Blinking State Logic
-    let blinkTimer = 0;
-    let nextBlinkInterval = 3.0;
-    let isBlinking = false;
-    let blinkProgress = 0;
-
     // Animation Loop
     let lastTime = performance.now();
     let isHeroVisible = true;
@@ -663,12 +667,12 @@ export function createRobot(canvas, hero, onReady, onError){
       robot.position.y = bob;
 
       // Head & Body Tracking Rotations
-      head.rotation.y = look.x * 0.5;
-      head.rotation.x = look.y * 0.42;
+      head.rotation.y = look.x * 0.22;
+      head.rotation.x = look.y * 0.20;
       head.rotation.z = -look.x * 0.06 + Math.sin(t * 1.1) * 0.015 * m;
 
-      body.rotation.y = look.x * 0.28;
-      body.rotation.x = look.y * 0.12;
+      body.rotation.y = look.x * 0.12;
+      body.rotation.x = look.y * 0.06;
 
       // Floating Arms Animations
       arms.forEach(arm => {
@@ -688,30 +692,7 @@ export function createRobot(canvas, hero, onReady, onError){
         wrap.position.y = py;
       });
 
-      // Random Eye Blinking Logic
-      blinkTimer += dt;
-      if (!prefersReducedMotion && !isBlinking && blinkTimer > nextBlinkInterval) {
-        isBlinking = true;
-        blinkProgress = 0;
-        blinkTimer = 0;
-        nextBlinkInterval = 2.5 + Math.random() * 3.5;
-      }
-
-      if (isBlinking) {
-        blinkProgress += dt / 0.32;
-        let scaleY = 1;
-        if (blinkProgress <= 0.5) {
-          scaleY = THREE.MathUtils.lerp(1, 0.08, blinkProgress * 2);
-        } else if (blinkProgress <= 1.0) {
-          scaleY = THREE.MathUtils.lerp(0.08, 1, (blinkProgress - 0.5) * 2);
-        } else {
-          isBlinking = false;
-          scaleY = 1;
-        }
-        eyeScales.forEach(scale => {
-          scale.y = scaleY;
-        });
-      }
+      // Eyes stay open; tracking and floating never collapse their geometry.
 
       // Dynamic Atmosphere Effects Reacting to Motion
       floorGlow.scale.set(3.4 - bob * 3, 0.42 - bob * 0.4, 1);
