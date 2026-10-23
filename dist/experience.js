@@ -1,4 +1,4 @@
-import {enter,reducedMotion} from './motion.js';
+import {reducedMotion} from './motion.js';
 import {lightNetwork} from './frame-cache.js';
 export function setupExperience(){
  const targets='.card,.portal-product,.portal-feature,.portal-tool,.portal-contact,.portal-section-heading';
@@ -14,6 +14,5 @@ export function setupExperience(){
  const media=window.gsap.matchMedia();
  media.add('(prefers-reduced-motion: no-preference)',()=>{
   if((window.portalInitialRoute||'home')==='home'&&!location.hash)window.gsap.fromTo('.portal-hero-copy > *',{autoAlpha:0,y:22},{autoAlpha:1,y:0,duration:.7,stagger:.1,ease:'power3.out',clearProps:'opacity,visibility,transform'});
-  if((window.portalInitialRoute||'home')==='home')enter(document.querySelector('.star-orbit'),{y:16,duration:.9});
  });
 }
