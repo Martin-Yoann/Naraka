@@ -20,8 +20,9 @@ test('sandbox OAuth, browser-bound tickets, explicit confirmation, one-time sess
   assert.equal((await call('/api/auth/wechat/poll','POST',x.browser,{origin:'https://evil.example'})).status,403);
   assert.equal((await call('/api/auth/wechat/poll','POST','zx_login='+x.id+'.wrong')).data.status,'expired');
   await call('/api/auth/wechat/callback?state='+x.state+'&code=valid','GET','');assert.equal(exchanges,0);
-  const callback=await call('/api/auth/wechat/callback?state='+x.state+'&code=valid','GET',x.phone);assert.match(callback.text,/确认登录电脑端/);assert.ok(!cookies(callback).includes('zx_session='));assert.equal(exchanges,1);
+  const callback=await call('/api/auth/wechat/callback?state='+x.state+'&code=valid','GET',x.phone);assert.match(callback.text,/确认登录电脑端/);assert.equal(callback.headers['referrer-policy'],'strict-origin');assert.ok(!cookies(callback).includes('zx_session='));assert.equal(exchanges,1);
   assert.equal((await call('/api/auth/wechat/poll','POST',x.browser)).data.status,'confirm');
+  assert.equal((await call('/api/auth/wechat/confirm','POST',cookies(callback),{origin:'https://evil.example'})).status,403);
   const approved=await call('/api/auth/wechat/confirm','POST',cookies(callback));assert.match(approved.text,/登录已确认/);
   const poll=await call('/api/auth/wechat/poll','POST',x.browser);assert.equal(poll.data.status,'approved');assert.ok(!('token' in poll.data));assert.match(poll.headers['set-cookie'][0],/HttpOnly; Secure; SameSite=Lax/);
   const logged=cookies(poll);assert.equal((await call('/api/auth/status','GET',logged)).data.user.nickname,'测试用户');
