@@ -23,3 +23,6 @@ body{background:#fff}.brand,.portal-tool h2,.portal-section-heading h2,.contact-
 @media(max-width:900px){.portal-hero{padding:36px 26px;min-height:370px}.portal-hero h1{font-size:32px}.portal-hero-art.robot-banner{width:42%}}
 @media(max-width:650px){.portal-hero{display:flex;flex-direction:column;min-height:0;padding:27px 21px 0;margin-top:6px}.portal-hero h1{font-size:27px;line-height:1.55;letter-spacing:-1px}.portal-hero p{max-width:100%;font-size:12px}.portal-hero-art.robot-banner{position:relative;inset:auto;width:100%;height:250px;flex:none;margin-top:6px;opacity:1}.robot-backdrop{width:190px;box-shadow:0 0 0 13px #fff8,0 0 0 14px #e9ebf066}.robot-ground{width:120px;bottom:17%}.robot-caption{bottom:5%;font-size:8px}.robot-caption span{font-size:9px;margin-top:5px}.header-right .portal-cbg{background:#f2f3f5;color:#1c2338}.portal-hero h1 em:after{width:6px;height:6px;margin-left:4px}}
 @media(prefers-reduced-motion:reduce){.robot-fallback,.robot-canvas{transition:none}}
+
+/* A geometric star keeps its center independent of platform font baselines. */
+.brand-icon{display:flex;align-items:center;justify-content:center;box-sizing:border-box;flex:none;line-height:0}.brand-icon>svg{display:block;width:18px;height:18px;flex:none}@media(max-width:650px){.brand-icon>svg{width:16px;height:16px}}
