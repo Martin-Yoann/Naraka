@@ -43,3 +43,46 @@ body[data-page="calculator"] #page-title{margin-block:18px 12px;font-size:clamp(
 .fee-title-caption>span{display:inline-block}.fee-title-caption em{font-style:normal;color:#1c2338;font-weight:600}
 body[data-page="calculator"] .page-heading{margin-bottom:26px}body[data-page="calculator"] #page-description{font-size:12px;color:#8b92a1;margin-top:12px}
 @media(max-width:600px){body[data-page="calculator"] #page-title{font-size:clamp(22px,6vw,28px);line-height:1.55;margin-top:14px}.fee-title-caption{margin-top:13px;padding-left:11px}body[data-page="calculator"] .page-heading{margin-bottom:22px}}
+
+/* A compact desktop workbench keeps inputs and the complete breakdown together. */
+body[data-page="calculator"] .fee-title-line{display:inline}
+@media(min-width:1000px){
+ body[data-page="calculator"] .content{padding-bottom:12px}
+ body[data-page="calculator"] .page-heading{padding-top:18px;margin-bottom:14px}
+ body[data-page="calculator"] .page-heading>div{max-width:100%}
+ body[data-page="calculator"] .breadcrumb{margin-bottom:6px}
+ body[data-page="calculator"] #page-title{font-size:clamp(23px,2.15vw,30px);line-height:1.4;margin:8px 0 6px;letter-spacing:-.035em}
+ body[data-page="calculator"] .fee-title-line{white-space:nowrap}
+ body[data-page="calculator"] .fee-title-caption{margin-top:8px;font-size:15px;line-height:1.6;padding-left:10px}
+ body[data-page="calculator"] #page-description{display:none}
+ .fee-intro{display:none}
+ .fee-workspace .card{margin-bottom:0}
+ .fee-workspace .calculator-grid{gap:18px}.fee-results-column{gap:12px}
+ .fee-tabs{margin:14px 18px 0;padding:5px}.fee-tabs button{min-height:32px;font-size:13px}
+ .fee-tabs::before{left:5px;top:5px;bottom:5px;width:calc((100% - 14px)/2)}
+ .fee-card-body{padding:16px 18px}.fee-card-body h2{font-size:14px;margin-bottom:14px}
+ .fee-workspace .fee-field,.fee-workspace #bargain-fields>.fee-field{gap:7px;margin-bottom:14px;font-size:13px}
+ .fee-workspace .fee-money-field input{height:40px;min-height:40px;font-size:18px}
+ .fee-rule-note{margin:14px 0 5px}.fee-precision-note{font-size:11px;line-height:1.7}
+ .fee-suggested{padding:7px 10px;margin:0 0 12px;font-size:12px}
+ .fee-share-card{padding:10px 14px;display:flex;align-items:center;gap:14px}.fee-share-card h2{font-size:13px;margin:0;white-space:nowrap}.fee-share-card .fee-share-group{flex:1;min-width:0}
+ .fee-share-group button{min-height:30px;font-size:13px}
+ .fee-workspace .calc-result{padding:15px 18px}.fee-result-heading{margin-bottom:10px}
+ .fee-highlight{padding:12px 14px;margin-bottom:8px}.fee-highlight small{display:inline;margin-left:6px}.fee-highlight #result-value{font-size:27px}
+ .fee-workspace .breakdown-row{padding:7px 0;font-size:12px}.fee-workspace .breakdown-row strong{font-size:14px}
+ .fee-row-emphasis strong small{display:inline;margin-left:8px;font-size:10px}
+ .fee-workspace #fee-baseline{margin-top:10px;padding:8px 10px;font-size:11px;line-height:1.7}
+ .fee-message:empty{display:none}.fee-message{margin-top:5px}
+ .fee-safety{margin-top:12px;padding:9px 12px;gap:9px}.fee-safety p{font-size:11px;line-height:1.7;margin:0}
+ body[data-page="calculator"] .portal-footer{margin-top:16px;padding:12px 0 0;flex-direction:row;align-items:center;justify-content:space-between;gap:14px}
+ body[data-page="calculator"] .portal-footer p,body[data-page="calculator"] .portal-footer>small{display:none}
+ body[data-page="calculator"] .portal-footer .footer-brand{font-size:12px}
+ body[data-page="calculator"] .portal-footer-links{gap:16px}
+ body[data-page="calculator"] .portal-footer-links>a,body[data-page="calculator"] .portal-footer-links>button{min-height:24px;height:24px;padding:0;display:inline-flex;align-items:center}
+}
+@media(min-width:1000px) and (max-height:800px){
+ body[data-page="calculator"] .content{padding-bottom:4px}
+ body[data-page="calculator"] .page-heading{padding-top:6px;margin-bottom:6px}
+ .fee-workspace .calc-result{padding:12px 16px}.fee-workspace .breakdown-row{padding:5px 0}
+ body[data-page="calculator"] .portal-footer{margin-top:6px;padding-top:6px}
+}
