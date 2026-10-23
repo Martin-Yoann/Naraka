@@ -16,3 +16,7 @@ CREATE TABLE IF NOT EXISTS zx_user_messages (
 CREATE INDEX IF NOT EXISTS zx_messages_owner ON zx_user_messages(user_id,created_at DESC,id);
 CREATE INDEX IF NOT EXISTS zx_messages_pending ON zx_user_messages(wechat_status,created_at);
 CREATE INDEX IF NOT EXISTS zx_messages_retention ON zx_user_messages(created_at);
+CREATE TABLE IF NOT EXISTS zx_user_settings (
+ user_id uuid PRIMARY KEY REFERENCES zx_auth_users(id), alerts_enabled boolean NOT NULL DEFAULT true,
+ lottery_auto_refresh boolean NOT NULL DEFAULT true, updated_at timestamptz NOT NULL DEFAULT now()
+);

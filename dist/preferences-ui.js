@@ -1,6 +1,6 @@
 import {openLogin} from './auth.js';
 const $=s=>document.querySelector(s),esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-let account=undefined,generation=0,catalog=[],preferences=[],editing=null,next=null,busy=false,loading=false;
+let account=undefined,generation=0,catalog=[],preferences=[],editing=null,next=null,busy=false,loading=false,alertsEnabled=true;
 const say=(text,error=false)=>{$('#pref-status').textContent=text;$('#pref-status').dataset.error=error};
 async function api(path,method='GET',body){const r=await fetch('/api/user/'+path,{method,credentials:'same-origin',headers:body?{'content-type':'application/json'}:{},...(body?{body:JSON.stringify(body)}:{}),signal:AbortSignal.timeout(20000)});const data=await r.json();if(!r.ok)throw Error(data.error||'请求失败，请稍后重试');return data}
 function badge(n){const el=$('#portal-alert-count');if(!el)return;el.textContent=n>99?'99+':n;el.hidden=!n;$('#pref-unread').textContent=n+' 条未读'}
@@ -21,4 +21,5 @@ $('#pref-list').onclick=e=>{const button=e.target.closest('button');if(!button||
 $('#pref-messages').onclick=e=>{const button=e.target.closest('[data-read]');if(button)mutate(()=>api('messages/read','POST',{id:button.dataset.read}))};$('#pref-read-all').onclick=()=>mutate(()=>api('messages/read','POST',{id:null}));$('#pref-more').onclick=()=>load(true);$('#pref-check').onclick=()=>mutate(()=>api('check','POST'));
 window.addEventListener('auth-changed',async e=>{const id=e.detail.loggedIn?e.detail.user?.id:null;if(id===account)return;account=id;generation++;preferences=[];next=null;loading=false;$('#pref-account').hidden=!id;$('#pref-guest').hidden=!!id;$('#pref-check').disabled=!id;$('#pref-list').replaceChildren();$('#pref-messages').replaceChildren();badge(0);reset();if(!id){say('登录后，偏好与消息会跟随账号同步。');return}try{if(!catalog.length){const r=await fetch('/api/catalog');if(!r.ok)throw Error();catalog=(await r.json()).items;$('#pref-type').innerHTML='<option value="" disabled>请选择谪星</option>'+catalog.map(c=>`<option value="${esc(c.id)}">${esc(c.name)} · ${esc(c.owner)}</option>`).join('');$('#pref-type').value=''}await load()}catch{say('图鉴读取失败，请刷新后重试',true)}});
 setInterval(()=>{if(account&&document.visibilityState==='visible'&&!busy)load()},60000);
+window.addEventListener('account-settings-changed',e=>{alertsEnabled=e.detail.alerts_enabled;if(e.detail.loggedIn&&!alertsEnabled)say('全部账号偏好提醒已暂停，可在头像 → 设置中重新开启。')});
 }
