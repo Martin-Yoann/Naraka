@@ -37,3 +37,9 @@ button:not(:disabled):has([data-icon="close"]):active{background-color:#1c233814
 body[data-page="calculator"] .page-heading>div{max-width:900px}body[data-page="calculator"] #page-title{font-size:clamp(22px,2.2vw,32px);line-height:1.65;text-wrap:pretty}
 @media(max-width:1020px){.portal-nav{gap:19px}}
 @media(prefers-reduced-motion:reduce){.portal-nav .nav::after,.fee-tabs::before,.fee-share-group::before{transition:none}}
+
+body[data-page="calculator"] #page-title{margin-block:18px 12px;font-size:clamp(25px,2.6vw,36px);line-height:1.5;letter-spacing:-.035em;font-weight:650}
+.fee-title-line{display:block}.fee-title-caption{display:block;margin-top:16px;padding-left:14px;border-left:3px solid #e23b2e;font-size:clamp(16px,1.4vw,19px);line-height:1.8;font-weight:400;letter-spacing:.02em;color:#697386}
+.fee-title-caption>span{display:inline-block}.fee-title-caption em{font-style:normal;color:#1c2338;font-weight:600}
+body[data-page="calculator"] .page-heading{margin-bottom:26px}body[data-page="calculator"] #page-description{font-size:12px;color:#8b92a1;margin-top:12px}
+@media(max-width:600px){body[data-page="calculator"] #page-title{font-size:clamp(22px,6vw,28px);line-height:1.55;margin-top:14px}.fee-title-caption{margin-top:13px;padding-left:11px}body[data-page="calculator"] .page-heading{margin-bottom:22px}}
