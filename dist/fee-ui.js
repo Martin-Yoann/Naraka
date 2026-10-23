@@ -6,6 +6,7 @@ let mode='quote',share='buyer',automatic=true,values={quote:'3000',target:'2760'
 function syncOffer(){if(!automatic)return;try{$('#offer').value=(minimumOffer(mode,$('#amount').value)/100).toFixed(2)}catch{$('#offer').value=''}$('#offer').dispatchEvent(new Event('change',{bubbles:true}))}
 function row(label,value,extra='',emphasis=false){return `<div class="breakdown-row${emphasis?' fee-row-emphasis':''}"><span>${label}</span><strong>${money(value)}${extra?`<small>${extra}</small>`:''}</strong></div>`}
 function render(){
+ $('.fee-tabs').dataset.mode=mode;$('.fee-share-group').dataset.share=share;
  $('#copy-fee').disabled=true;$('#fee-suggested').hidden=mode!=='target';$('#result-title').textContent='结果 · '+shares[share];$('#amount-label').textContent=mode==='target'?'卖家想到手（原始基准）':'挂价（CBG 上架价）';lastResult=null;
  for(const b of document.querySelectorAll('[data-fee-mode]'))b.setAttribute('aria-pressed',String(b.dataset.feeMode===mode));for(const b of document.querySelectorAll('[data-fee-share]'))b.setAttribute('aria-pressed',String(b.dataset.feeShare===share));
  try{

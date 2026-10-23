@@ -22,3 +22,18 @@ button:not(:disabled):active .app-icon[data-icon="close"]{transform:rotate(90deg
 button:not(:disabled):has([data-icon="close"]):active{background-color:#1c233814;box-shadow:0 0 0 3px #1c23380d}
 .portal-product-price>a:active{transform:scale(.96)}
 @media(prefers-reduced-motion:reduce){.app-icon[data-icon="close"],.portal-product-price>a{transition:none!important;transform:none!important}}
+
+.portal-nav{gap:22px}.portal-nav .nav{position:relative;padding-inline:3px;border-bottom:0}
+.portal-nav .nav::after{content:"";position:absolute;left:3px;right:3px;bottom:2px;height:2px;border-radius:2px;background:#e23b2e;transform:scaleX(0);transform-origin:center;transition:transform .28s cubic-bezier(.22,1,.36,1);pointer-events:none}
+.portal-nav .nav.active::after,.portal-nav .nav:focus-visible::after{transform:scaleX(1)}
+@media(hover:hover){.portal-nav .nav:hover::after{transform:scaleX(1)}}
+.fee-tabs{position:relative;isolation:isolate}.fee-tabs::before{content:"";position:absolute;z-index:0;left:6px;top:6px;bottom:6px;width:calc((100% - 16px)/2);border-radius:5px;background:#fff;box-shadow:0 1px 5px #00000014;pointer-events:none;transition:transform .32s cubic-bezier(.22,1,.36,1)}
+.fee-tabs[data-mode="target"]::before{transform:translateX(calc(100% + 4px))}
+.fee-tabs button{position:relative;z-index:1}.fee-tabs button[aria-pressed=true]{background:transparent;box-shadow:none}
+.fee-share-group{position:relative;isolation:isolate;border:1px solid #d9d9d9;border-radius:6px;background:#f5f5f5;padding:3px;gap:3px}
+.fee-share-group::before{content:"";position:absolute;left:3px;top:3px;bottom:3px;width:calc((100% - 12px)/3);background:#fff;box-shadow:0 1px 4px #00000014;border-radius:4px;pointer-events:none;transition:transform .32s cubic-bezier(.22,1,.36,1)}
+.fee-share-group[data-share="split"]::before{transform:translateX(calc(100% + 3px))}.fee-share-group[data-share="seller"]::before{transform:translateX(calc(200% + 6px))}
+.fee-share-group button,.fee-share-group button[aria-pressed=true]{position:relative;z-index:1;background:transparent;border:0;margin:0;border-radius:4px}
+body[data-page="calculator"] .page-heading>div{max-width:900px}body[data-page="calculator"] #page-title{font-size:clamp(22px,2.2vw,32px);line-height:1.65;text-wrap:pretty}
+@media(max-width:1020px){.portal-nav{gap:19px}}
+@media(prefers-reduced-motion:reduce){.portal-nav .nav::after,.fee-tabs::before,.fee-share-group::before{transition:none}}
