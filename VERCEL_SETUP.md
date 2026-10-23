@@ -61,4 +61,14 @@ API 不会在每次请求时建表，必须先成功执行 `db:migrate` 或 Acti
 
 趋势接口分批读取仍然保留的真实行情，后续刷新按游标增量读取。抽签历史最低价独立持久保存。Actions 在采集后检查总量上限，并每满72小时清理一次届时超过72小时的明细；保留史低汇总及对应样本。长时间范围可能因清理而不完整。手动抽签查询与普通批次分开保存；详见 [数据保留规则](docs/data-retention-and-live.md)。
 
-微信登录和公众号发送在此云端版本尚未启用；本机已有实现保留。浏览器本机订阅仍要求网页保持打开。
+微信登录支持微信开放平台网站应用，或公众平台测试号的网页授权与电脑端二维码确认。公众号消息发送仍未启用；浏览器本机订阅仍要求网页保持打开。
+
+## 5. 公众平台测试号登录
+
+Vercel Production 环境配置 `SITE_ORIGIN`（正式 HTTPS 源站）、`WECHAT_OA_APP_ID`、`WECHAT_OA_APP_SECRET`、`WECHAT_OA_SANDBOX=true` 和自选的 `WECHAT_CALLBACK_TOKEN`。密钥仅放环境变量；`WECHAT_SEND_ENABLED=false`。测试号的“网页授权获取用户基本信息”回调域填写正式主机名，不带协议或路径；测试微信必须先关注测试号并进入其用户列表。
+
+- 接口配置 URL：`https://正式域名/api/wechat/callback`；Token 与 `WECHAT_CALLBACK_TOKEN` 相同。服务端校验微信 SHA1 签名后原样返回验证字符串，消息 POST 仅确认接收，不发送消息。
+- JS 接口安全域名不是 OAuth 回调域；本次登录不依赖 JS-SDK。
+- 微信内可直接授权登录；电脑端二维码指向本站授权入口，手机完成微信授权后再确认电脑登录。二维码的浏览器凭据只保存在 HttpOnly Cookie 中，扫码内容不包含它。已确认票据仅能兑换一次登录会话。
+- 账号与哈希会话、短期 OAuth 状态独立存入 Neon 的 `zx_auth_*` 表，不参与行情三天清理。可执行 `npm run db:migrate` 提前建表；认证表也支持首次使用时初始化。
+- 这条测试号流程不是微信开放平台 `snsapi_login` 网站应用权限，不能据此宣称网站应用已通过审核。实际昵称和头像以微信接口返回为准。正式网站应用配置仍使用独立的 `WECHAT_WEB_APP_ID` / `WECHAT_WEB_APP_SECRET`。

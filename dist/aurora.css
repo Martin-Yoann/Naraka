@@ -26,3 +26,4 @@ body{background:#fff}.brand,.portal-tool h2,.portal-section-heading h2,.contact-
 
 /* A geometric star keeps its center independent of platform font baselines. */
 .brand-icon{display:flex;align-items:center;justify-content:center;box-sizing:border-box;flex:none;line-height:0}.brand-icon>svg{display:block;width:18px;height:18px;flex:none}@media(max-width:650px){.brand-icon>svg{width:16px;height:16px}}
+.login-bridge-qr{display:block;width:256px;height:256px;max-width:100%;object-fit:contain;margin:18px auto;background:white}.login-dialog .login-policy{line-height:1.8}.login-dialog .login-status{line-height:1.8;min-height:36px}

@@ -20,11 +20,22 @@ export async function openLogin(){
  closeMenu();cleanup();if(!modal.open)modal.showModal();const current=request;$('.login-expired').hidden=true;$('#login-full-page').hidden=true;$('#login-oa').hidden=true;$('#login-retry').hidden=true;$('.login-status').textContent='';showPlaceholder('正在准备微信登录…','请稍候');
  await refreshAuth();if(current!==request||!modal.open)return;if(status.loggedIn){modal.close();return}
  const inWeChat=/MicroMessenger/i.test(navigator.userAgent);
+ $('.login-policy').textContent=status.sandbox?'测试号登录：请先关注测试号。手机授权后，需再次确认允许当前电脑登录。首次授权自动创建本站账号。':'首次微信授权后自动注册账号。支持的电脑微信可通过官方组件确认快捷登录，也可使用手机扫码。';
  if(inWeChat&&status.oaReady){showPlaceholder('使用当前微信账号登录','点击下方按钮，在微信中确认授权');$('#login-oa').hidden=false;return}
- if(!status.webReady){showPlaceholder('微信登录暂未开通','暂时无法获取有效登录二维码，请稍后再试。');$('#login-retry').hidden=false;return}
- $('#login-full-page').hidden=false;
+ if(!status.webReady&&!status.oaReady){showPlaceholder('微信登录暂未开通','暂时无法获取有效登录二维码，请稍后再试。');$('#login-retry').hidden=false;return}
+ $('#login-full-page').hidden=!status.webReady;
  try{
   const r=await fetch('/api/auth/wechat/qr',{method:'POST',headers:{'content-type':'application/json'},signal:AbortSignal.timeout(10000)});if(!r.ok)throw Error();const data=await r.json();if(current!==request||!modal.open)return;
+  if(data.kind==='oa-bridge'){
+   if(typeof data.image!=='string'||!data.image.startsWith('data:image/png;base64,'))throw Error();
+   const image=new Image();image.src=data.image;image.alt='使用微信扫一扫登录谪星阁';image.className='login-bridge-qr';$('#wechat-login-container').append(image);$('.login-placeholder').hidden=true;
+   $('.login-status').textContent='请使用已关注测试号的微信扫码，并在手机上确认登录电脑端。';
+   const until=Date.now()+Math.min(600,Number(data.expiresIn)||600)*1000;let polling=false;
+   const expire=message=>{clearInterval(expiryTimer);clearInterval(pollTimer);$('#wechat-login-container').replaceChildren();$('.login-expired').hidden=false;$('.login-status').textContent=message};
+   expiryTimer=setInterval(()=>{if(Date.now()>=until)expire('二维码已过期，请刷新后重新扫码。')},1000);
+   pollTimer=setInterval(async()=>{if(polling||document.hidden||current!==request||!modal.open)return;polling=true;try{const r=await fetch('/api/auth/wechat/poll',{method:'POST',signal:AbortSignal.timeout(8000)});if(!r.ok)throw Error();const result=await r.json();if(current!==request||!modal.open)return;if(result.status==='approved'){clearInterval(pollTimer);await refreshAuth();modal.close()}else if(['expired','cancelled','consumed'].includes(result.status))expire(result.status==='cancelled'?'已在手机上取消授权，请刷新后重试。':'二维码已失效，请刷新重试。');else $('.login-status').textContent=result.status==='confirm'?'微信授权已完成，请在手机上点击“确认登录电脑端”。':result.status==='scanned'?'已扫码，请在微信中完成授权。':'请使用已关注测试号的微信扫码。'}catch{if(current===request&&modal.open)$('.login-status').textContent='登录状态读取较慢，正在重试…'}finally{polling=false}},3000);
+   return;
+  }
   if(!data.appId||!data.state||data.scope!=='snsapi_login'||new URL(data.redirectUri).origin!==location.origin)throw Error();
   await sdk();if(current!==request||!modal.open)return;
   widget={self_redirect:false,id:'wechat-login-container',appid:data.appId,scope:data.scope,redirect_uri:encodeURIComponent(data.redirectUri),state:data.state,stylelite:1,fast_login:1,color_scheme:'light',onReady:()=>{if(current!==request)return;clearTimeout(readyTimer);$('.login-placeholder').hidden=true;$('.login-status').textContent='请在微信中确认，或使用手机微信扫码。'},onQRcodeReady:()=>{if(current!==request)return;clearTimeout(readyTimer);$('.login-placeholder').hidden=true;$('.login-status').textContent='使用手机微信扫一扫，并在微信中确认登录。'}};
