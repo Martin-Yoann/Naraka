@@ -20,3 +20,11 @@ CREATE TABLE IF NOT EXISTS zx_user_settings (
  user_id uuid PRIMARY KEY REFERENCES zx_auth_users(id), alerts_enabled boolean NOT NULL DEFAULT true,
  lottery_auto_refresh boolean NOT NULL DEFAULT true, updated_at timestamptz NOT NULL DEFAULT now()
 );
+CREATE TABLE IF NOT EXISTS zx_user_favorites (
+ id uuid PRIMARY KEY, user_id uuid NOT NULL REFERENCES zx_auth_users(id), item_id text NOT NULL,
+ payload jsonb NOT NULL, remind boolean NOT NULL DEFAULT false, wechat boolean NOT NULL DEFAULT false,
+ revision uuid NOT NULL, created_at timestamptz NOT NULL DEFAULT now(), updated_at timestamptz NOT NULL DEFAULT now(),
+ UNIQUE(user_id,item_id)
+);
+CREATE INDEX IF NOT EXISTS zx_favorites_owner ON zx_user_favorites(user_id,created_at DESC);
+CREATE INDEX IF NOT EXISTS zx_favorites_reminders ON zx_user_favorites(item_id) WHERE remind=true;

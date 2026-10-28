@@ -1,5 +1,5 @@
 export const groupKey=item=>JSON.stringify([item.skin,item.holesCount??item.slots.length]);
-export function priceSamples(previous=[],items=[]){const samples=new Map(previous.map(s=>[s.id,s]));for(const item of items)samples.set(item.id,{id:item.id,priceCents:item.priceCents});return [...samples.values()].slice(-64)}
+export function priceSamples(previous=[],items=[]){const samples=new Map(previous.map(s=>[s.id,s]));for(const item of items){samples.delete(item.id);samples.set(item.id,{id:item.id,priceCents:item.priceCents,observedAt:item.observedAt,slots:item.slots,unlocks:item.unlocks})}return [...samples.values()].slice(-64)}
 export function verifiedLottery(item,at){return item.status==='listed'&&item.lotteryConfirmed===true&&item.isLottery===true&&Date.parse(item.lotteryEndsAt)>Date.parse(at)}
 export function lotterySummary(batches,now=Date.now()){
  const groups=new Map(),events=[];

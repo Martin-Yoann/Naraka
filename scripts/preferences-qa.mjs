@@ -1,3 +1,4 @@
+import {userFavorites} from '../lib/user-favorites.mjs';
 // Isolated account fixtures live only in PGlite and intercepted browser requests.
 // Production market endpoints remain read-only; no fake users or prices enter Neon.
 import {chromium,expect} from '@playwright/test';
@@ -13,7 +14,7 @@ const db={async query(sql,values){if(!values&&sql.split(';').length>2){await pg.
 const accounts=cloudAccounts(db),id=await accounts.identity({appid:'qa-only',openid:'qa-only'}),token=await accounts.session(id),catalog=JSON.parse(await readFile('dist/catalog.json','utf8'));
 await db.query(await readFile('lib/cloud-schema.sql','utf8'));
 await db.query('INSERT INTO zx_inventory VALUES($1,$2,now(),now(),$3)',['qa-only-item',catalog.items[0].id,JSON.stringify({id:'qa-only-item',skin:catalog.items[0].name,equipType:catalog.items[0].id,holesCount:4,slots:[0,12,34,1],unlocks:[1,1,1,1],priceCents:9900,status:'listed',isLottery:true,lotteryConfirmed:true,lotteryEndsAt:new Date(Date.now()+3600000).toISOString(),url:'https://yjwujian.cbg.163.com/cgi/mweb/'})]);
-const store=userPreferences(db),handler=createUserHandler({accounts:()=>accounts,preferences:()=>store,settings:()=>userSettings(db),storage:()=>({settings:{get:async()=>catalog},lease:async()=>()=>{}}),config:()=>({})});
+const store=userPreferences(db),handler=createUserHandler({accounts:()=>accounts,preferences:()=>store,favorites:()=>userFavorites(db),settings:()=>userSettings(db),storage:()=>({settings:{get:async()=>catalog},lease:async()=>()=>{}}),config:()=>({})});
 const browser=await chromium.launch({executablePath:'C:/Program Files/Google/Chrome/Application/chrome.exe',headless:true});
 try{
  const context=await browser.newContext({viewport:{width:1440,height:1050}});let logged=true;const errors=[];

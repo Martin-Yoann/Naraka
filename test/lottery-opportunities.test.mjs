@@ -22,8 +22,17 @@ test('first listing and repeated self observations do not establish a deal; inde
  assert.equal(priceSignal({...lower,priceCents:9500},summary.groups[0]).good,false,'a rebound by the same listing must not be called a new low');
 });
 test('near low requires three independent references and a material median discount; excludes stale/expired/unconfirmed windows',()=>{
- const group={priceCents:10000,item:item('a'),priceSamples:[{id:'a',priceCents:10000},{id:'b',priceCents:12000},{id:'c',priceCents:13000}]};assert.equal(priceSignal(item('near',10400),group).kind,'near-low');assert.equal(priceSignal(item('ordinary',11000),group).good,false);assert.equal(priceSignal(item('few',10400),{...group,priceSamples:[]}).good,false);
+ const group={priceCents:10000,item:item('a'),priceSamples:[{id:'a',priceCents:10000},{id:'b',priceCents:12000},{id:'c',priceCents:13000}].map(s=>({...s,observedAt:iso(now),unlocks:[1,1]}))};assert.equal(priceSignal(item('near',10400),group,now).kind,'near-low');assert.equal(priceSignal(item('ordinary',11000),group,now).good,false);assert.equal(priceSignal(item('few',10400),{...group,priceSamples:[]},now).good,false);
  assert.equal(lotteryOpportunities([item('stale',9000,{observedAt:iso(now-66*60000)}),item('expired',9000,{lotteryEndsAt:iso(now)}),upcoming('unknown',9000,{lotteryWindowConfirmed:false})],[{...group,key:groupKey(item('x'))}],now).length,0);
+});
+
+test('recent pricing trims outliers, excludes stale and mismatched unlock positions, and explains evidence',()=>{
+ const samples=[10000,12000,13000,14000,15000,1000000].map((priceCents,n)=>({id:'sample-'+n,priceCents,observedAt:iso(now),unlocks:[1,1]}));
+ const group={key:groupKey(item('x')),priceCents:5000,item:item('old',5000),at:iso(now-60*86400000),priceSamples:samples};
+ const result=priceSignal(item('candidate',11000),group,now);assert.equal(result.kind,'recent-value');assert.equal(result.excludedOutliers,1);assert.equal(result.medianCents,13000);assert.equal(result.basis,'same-unlocks');assert.ok(result.reasons.length>=2);
+ assert.equal(priceSignal(item('candidate',11000),{...group,priceSamples:samples.map(s=>({...s,observedAt:iso(now-31*86400000)}))},now).good,false);
+ assert.equal(priceSignal(item('candidate',11000),{...group,priceSamples:samples.map(s=>({...s,unlocks:[0,1]}))},now).good,false);
+ assert.equal(priceSignal(item('candidate',11000),{...group,priceSamples:samples.map(s=>({...s,id:'duplicate'}))},now).kind,'insufficient');
 });
 test('upcoming snapshot persists without altering confirmed lottery low or generating new-low events',()=>{
  const active=item('old',10000),summary=lotterySummary([{at:iso(now),coverage:'partial',items:[active]}],now),future=upcoming('future',5000);
