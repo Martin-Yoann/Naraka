@@ -6,8 +6,19 @@ import {cloudStorage} from '../lib/cloud-storage.mjs';
 import {refreshLotterySource} from '../lib/refresh-lottery.mjs';
 import {createCloudHandler} from '../lib/cloud-handler.mjs';
 import {dataPolicy} from '../lib/data-policy.mjs';
+import {compactLottery} from '../dist/market-payload.js';
 const item=(id,at,extra={})=>({id,equipType:'3400046',skin:'谪星·2P',holesCount:0,slots:[],unlocks:[],priceCents:10000,favorites:1,publicity:false,status:'listed',isLottery:true,lotteryConfirmed:true,observedAt:at,lotteryEndsAt:new Date(Date.parse(at)+3600000).toISOString(),ordersn:id,serverId:2,previewFrames:['https://cbg-yjwujian.res.netease.com/1.png'],...extra});
 async function fixture(){const pg=new PGlite();await pg.exec(await readFile('lib/cloud-schema.sql','utf8'));const db={async query(sql,values){const result=await pg.query(sql,values);return {...result,rowCount:result.affectedRows??result.rows.length}},async connect(){return {...this,release(){}}}};return {pg,db,storage:cloudStorage(db)}}
+
+test('cloud saves upcoming detail windows through inventory, snapshot and compact API without changing confirmed lows',async()=>{
+ const {pg,storage}=await fixture();try{
+  const at=new Date().toISOString(),baseline=item('past',at,{priceCents:20000});await storage.store.import({at,coverage:'partial',items:[baseline]});
+  const future={...item('future',at,{priceCents:10000}),isLottery:false,publicity:true,lotteryStartsAt:new Date(Date.now()+3600000).toISOString(),lotteryEndsAt:new Date(Date.now()+4500000).toISOString(),lotteryWindowConfirmed:true};
+  await storage.lottery.saveRefresh({at,items:[future],checked:[{id:future.id,at,eligible:false}],upcomingHours:6,state:'idle'});
+  assert.ok((await storage.inventory.candidates()).some(i=>i.id===future.id));const result=compactLottery(await storage.lottery.read());assert.equal(result.groups[0].priceCents,20000);assert.equal(result.events.length,0);assert.equal(result.opportunities.find(i=>i.id===future.id).window,'upcoming');assert.equal(result.opportunities.find(i=>i.id===future.id).deal.good,true);assert.equal(result.opportunities.find(i=>i.id===future.id).previewFrames,undefined);
+  assert.ok(!(result.liveItems??[]).some(i=>i.id===future.id));await storage.store.import({at:new Date(Date.now()+1000).toISOString(),coverage:'partial',items:[future]});assert.equal((await storage.store.read()).batches.at(-1).items[0].lotteryWindowConfirmed,true);
+ }finally{await pg.close()}
+});
 test('72-hour cleanup cadence preserves historic low and preview, while row caps prune oldest records',async()=>{
  const {pg,db,storage}=await fixture();try{
   const now=Date.now(),at=new Date(now).toISOString(),old=new Date(now-7*86400000).toISOString(),later=new Date(now+72*3600000).toISOString();

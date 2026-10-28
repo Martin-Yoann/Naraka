@@ -86,3 +86,6 @@ body[data-page="calculator"] .fee-title-line{display:inline}
  .fee-workspace .calc-result{padding:12px 16px}.fee-workspace .breakdown-row{padding:5px 0}
  body[data-page="calculator"] .portal-footer{margin-top:6px;padding-top:6px}
 }
+.lottery-deal-controls{display:flex;flex-wrap:wrap;align-items:center;gap:12px}.lottery-deal-controls>label:first-child{font-size:12px;min-width:160px;gap:6px}.lottery-window-tag{display:inline-block;font-size:11px;padding:4px 8px;border-radius:4px;background:#f1f3f7;color:#465472;margin-bottom:10px}.lottery-live-products .live-lottery-product>small{line-height:1.8;color:#8a463b}
+.lottery-deal-controls .lottery-auto-label{flex-direction:row;align-items:center;gap:6px;font-size:12px}.live-lottery-product>a{display:inline-flex;align-items:center;margin-left:8px;min-height:36px}
+@media(max-width:760px){#lottery-view .card-heading:has(.lottery-deal-controls){align-items:flex-start;flex-direction:column}.lottery-deal-controls{width:100%}}

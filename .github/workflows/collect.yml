@@ -14,6 +14,7 @@ jobs:
     timeout-minutes: 12
     env:
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      LOTTERY_UPCOMING_HOURS: ${{ vars.LOTTERY_UPCOMING_HOURS || '6' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -30,7 +31,7 @@ jobs:
           fi
       - name: Initialize idempotent database schema
         run: npm run db:migrate
-      - name: Collect public market pages and save checkpoints
+      - name: Discover limited lottery candidates and verify current or upcoming windows
         run: npm run collect
 
       - name: Match account lottery preferences against fresh confirmed observations
